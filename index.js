@@ -6,30 +6,20 @@ $(document).ready(initRx);
 function initRx() {
 
   const input = $('#search');
-  const search = Rx.Observable
+  const source = Rx.Observable
     .fromEvent(input, 'keyup')
     .map(e => e.target.value)
-    .filter(text => text.length > 2);
+    .filter(text => text.length > 2)
+    .distinctUntilChanged();
 
-  let currSearch = null;
+  const searchResult = source
+    .flatMap(searchDcardPosts)
+    .map(formatResponse);
 
-  search.subscribe(val => {
-    if (currSearch === val) {
-      return;
-    }
-    currSearch = val;
-
-    searchDcardPosts(val)
-      .then(res => {
-        console.log('res', res);
-
-        const postsTitle = res.map(post => {
-          return post.title + ' - ' + post.excerpt;
-        });
-        renderResult(postsTitle);
-      });
-
+  searchResult.subscribe(posts => {
+    renderResult(posts);
   });
+
 }
 
 function searchDcardPosts(query) {
@@ -38,6 +28,12 @@ function searchDcardPosts(query) {
   return $.ajax({
     url: API.replace(/@query/, query)
   }).promise();
+}
+
+function formatResponse(res) {
+  return res.map(post => {
+    return post.title + ' - ' + post.excerpt;
+  });
 }
 
 function renderResult(values) {
