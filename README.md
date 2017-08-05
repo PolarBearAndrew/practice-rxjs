@@ -1,2 +1,2 @@
 # practice-rxjs
-a little practice for Rx.js
+Search Dcard posts using Rx.js
